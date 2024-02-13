@@ -34,6 +34,10 @@ const (
 
 	tableStepDefintionMatch            string = "step_defintion_match"
 	tableStepDefintionMatchIndexStepID string = "id"
+
+	tableStepHandler        string = "step_handler"
+	tableStepHandlerIndexID string = "id"
+	tableStepHandlerUsed    string = "used"
 )
 
 // Storage is a thread safe in-mem storage
@@ -91,6 +95,21 @@ func NewStorage() *Storage {
 						Name:    tablePickleResultIndexPickleID,
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "PickleID"},
+					},
+				},
+			},
+			tableStepHandler: {
+				Name: tableStepHandler,
+				Indexes: map[string]*memdb.IndexSchema{
+					tableStepHandlerIndexID: {
+						Name:    tableStepHandlerIndexID,
+						Unique:  true,
+						Indexer: &memdb.StringFieldIndex{Field: "ID"},
+					},
+					tableStepHandlerUsed: {
+						Name:    tableStepHandlerUsed,
+						Unique:  false,
+						Indexer: &memdb.BoolFieldIndex{Field: "Used"},
 					},
 				},
 			},
@@ -283,6 +302,27 @@ func (s *Storage) MustInsertStepDefintionMatch(stepID string, match *models.Step
 func (s *Storage) MustGetStepDefintionMatch(stepID string) *models.StepDefinition {
 	v := s.mustFirst(tableStepDefintionMatch, tableStepDefintionMatchIndexStepID, stepID)
 	return v.(stepDefinitionMatch).StepDefinition
+}
+
+// MustInsertStepHandler will insert StepHandler or panic on error.
+func (s *Storage) MustInsertStepHandler(h models.StepHandler) {
+	s.mustInsert(tableStepHandler, h)
+}
+
+// MustGetStepHandler will retrieve the matched StepHandler for the ID or panic on error.
+func (s *Storage) MustGetStepHandler(id string) models.StepHandler {
+	v := s.mustFirst(tableStepHandler, tableStepHandlerIndexID, id)
+	return v.(models.StepHandler)
+}
+
+// MustGetUnusedStepHandlers will unused step handlers or panic on error.
+func (s *Storage) MustGetUnusedStepHandlers() (unused []models.StepHandler) {
+	it := s.mustGet(tableStepHandler, tableStepHandlerUsed, false)
+	for v := it.Next(); v != nil; v = it.Next() {
+		unused = append(unused, v.(models.StepHandler))
+	}
+
+	return unused
 }
 
 func (s *Storage) mustInsert(table string, obj interface{}) {

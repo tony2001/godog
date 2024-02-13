@@ -186,6 +186,17 @@ func (f *Base) Summary() {
 		fmt.Fprintln(f.out, "Randomized with seed:", colors.Yellow(seed))
 	}
 
+	unused := f.Storage.MustGetUnusedStepHandlers()
+	if len(unused) > 0 {
+		fmt.Fprintln(f.out, "")
+		fmt.Fprintln(f.out, red("These handlers seem to be unused:"))
+		text := ""
+		for _, h := range unused {
+			text += fmt.Sprintf("%s\n", h.Name)
+		}
+		fmt.Fprintln(f.out, yellow(text))
+	}
+
 	if text := f.Snippets(); text != "" {
 		fmt.Fprintln(f.out, "")
 		fmt.Fprintln(f.out, yellow("You can implement step definitions for undefined steps with these snippets:"))

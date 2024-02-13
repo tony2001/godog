@@ -167,6 +167,9 @@ func (s *suite) runStep(ctx context.Context, pickle *Scenario, step *Step, scena
 	s.storage.MustInsertStepDefintionMatch(step.AstNodeIds[0], match)
 	sr.Def = match
 	s.fmt.Defined(pickle, step, match.GetInternalStepDefinition())
+	if match != nil {
+		s.markHandlerUsed(match.Handler)
+	}
 
 	if err != nil {
 		sr = models.NewStepResult(pickle.Id, step.Id, match)
@@ -540,4 +543,26 @@ func (s *suite) runPickle(pickle *messages.Pickle) (err error) {
 	// so that error from handler can be added to step.
 
 	return err
+}
+
+func (s *suite) saveHandler(stepFunc interface{}) {
+	if s.storage == nil {
+		return
+	}
+
+	handler := models.NewStepHandler(stepFunc)
+	s.storage.MustInsertStepHandler(handler)
+}
+
+func (s *suite) markHandlerUsed(stepFunc interface{}) {
+	if s.storage == nil {
+		return
+	}
+
+	tmpHandler := models.NewStepHandler(stepFunc)
+	handler := s.storage.MustGetStepHandler(tmpHandler.ID)
+	if !handler.Used {
+		handler.Used = true
+		s.storage.MustInsertStepHandler(handler)
+	}
 }

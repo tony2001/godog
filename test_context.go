@@ -329,6 +329,7 @@ func (ctx ScenarioContext) stepWithKeyword(expr interface{}, stepFunc interface{
 	}
 
 	ctx.suite.steps = append(ctx.suite.steps, def)
+	ctx.suite.saveHandler(stepFunc)
 }
 
 // Build creates a test package like go test command at given target path.
